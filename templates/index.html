@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>YouTube Sentiment Analyzer</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <h1>YouTube Sentiment Analyzer</h1>
+
+    <div class="summary-card">
+        <h2>Total Comments Analyzed</h2>
+        <h1>{{ total }}</h1>
+    </div>
+
+    <div class="stats">
+
+        <div class="card positive">
+            <h2>Positive 😊</h2>
+            <h1>{{ positive }}</h1>
+            <p>{{ positive_pct }}%</p>
+        </div>
+
+        <div class="card neutral">
+            <h2>Neutral 😐</h2>
+            <h1>{{ neutral }}</h1>
+            <p>{{ neutral_pct }}%</p>
+        </div>
+
+        <div class="card negative">
+            <h2>Negative 😡</h2>
+            <h1>{{ negative }}</h1>
+            <p>{{ negative_pct }}%</p>
+        </div>
+
+    </div>
+
+    <h2>Analyzed Comments</h2>
+
+    <table>
+
+        <tr>
+            <th>Comment</th>
+            <th>Sentiment</th>
+        </tr>
+
+        {% for row in comments %}
+        <tr>
+            <td>{{ row.comment }}</td>
+            <td>{{ row.sentiment }}</td>
+        </tr>
+        {% endfor %}
+
+    </table>
+
+</div>
+
+</body>
+</html>
