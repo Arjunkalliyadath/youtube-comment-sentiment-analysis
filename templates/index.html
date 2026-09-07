@@ -1,61 +1,162 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>YouTube Sentiment Analyzer</title>
-    <link rel="stylesheet" href="/static/style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PulseScope — YouTube comment sentiment</title>
+<meta name="description" content="See how viewers really feel about a YouTube video, at a glance.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
-<div class="container">
+<div class="grid-backdrop" aria-hidden="true"></div>
 
-    <h1>YouTube Sentiment Analyzer</h1>
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <span class="brand-name">PulseScope</span>
+  </div>
+  {% if has_data %}
+  <a class="btn-download" href="/download">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3v13"></path>
+      <path d="M7 11l5 5 5-5"></path>
+      <path d="M4 19h16"></path>
+    </svg>
+    Download all comments
+  </a>
+  {% endif %}
+</header>
 
-    <div class="summary-card">
-        <h2>Total Comments Analyzed</h2>
-        <h1>{{ total }}</h1>
+<main class="page">
+
+  <section class="hero">
+    <canvas id="hero-field" aria-hidden="true"></canvas>
+
+    <div class="hero-inner">
+
+      <div class="video-card">
+        {% if video.thumbnail_url %}
+        <a href="{{ video.video_url }}" target="_blank" rel="noopener" class="thumb-link">
+          <img src="{{ video.thumbnail_url }}" alt="Thumbnail for {{ video.title }}" class="thumb">
+          <span class="play-badge" aria-hidden="true">▶</span>
+        </a>
+        {% else %}
+        <div class="thumb-placeholder">No video analyzed yet</div>
+        {% endif %}
+
+        <div class="video-meta">
+          <h1 class="video-title">{{ video.title }}</h1>
+          {% if video.channel %}
+          <p class="video-channel">{{ video.channel }}</p>
+          {% endif %}
+          {% if video.video_url %}
+          <a class="video-link" href="{{ video.video_url }}" target="_blank" rel="noopener">Watch on YouTube ↗</a>
+          <p class="video-url">{{ video.video_url }}</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="pulse-panel">
+        <p class="pulse-label">Comments analyzed</p>
+        <p class="pulse-total" data-count="{{ total }}">0</p>
+
+        {% if has_data %}
+        <div class="spectrum" role="img" aria-label="{{ positive_pct }}% positive, {{ neutral_pct }}% neutral, {{ negative_pct }}% negative">
+          <div class="spectrum-segment positive" data-pct="{{ positive_pct }}"></div>
+          <div class="spectrum-segment neutral" data-pct="{{ neutral_pct }}"></div>
+          <div class="spectrum-segment negative" data-pct="{{ negative_pct }}"></div>
+        </div>
+
+        <div class="spectrum-key">
+          <div class="key-item positive"><span class="dot" aria-hidden="true"></span>Positive <strong>{{ positive }}</strong><em>{{ positive_pct }}%</em></div>
+          <div class="key-item neutral"><span class="dot" aria-hidden="true"></span>Neutral <strong>{{ neutral }}</strong><em>{{ neutral_pct }}%</em></div>
+          <div class="key-item negative"><span class="dot" aria-hidden="true"></span>Negative <strong>{{ negative }}</strong><em>{{ negative_pct }}%</em></div>
+        </div>
+        {% else %}
+        <p class="empty-note">Run the pipeline to see a breakdown here.</p>
+        {% endif %}
+      </div>
+
+    </div>
+  </section>
+
+  {% if has_data %}
+  <section class="explorer">
+    <div class="explorer-head">
+      <h2>Comment explorer</h2>
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-tab="random" role="tab" aria-selected="true">Random sample · {{ random_comments|length }}</button>
+        <button class="tab" data-tab="positive" role="tab" aria-selected="false">Top positive · {{ top_positive|length }}</button>
+        <button class="tab" data-tab="negative" role="tab" aria-selected="false">Top negative · {{ top_negative|length }}</button>
+        <button class="tab" data-tab="neutral" role="tab" aria-selected="false">Top neutral · {{ top_neutral|length }}</button>
+      </div>
     </div>
 
-    <div class="stats">
+    <div class="panels">
 
-        <div class="card positive">
-            <h2>Positive 😊</h2>
-            <h1>{{ positive }}</h1>
-            <p>{{ positive_pct }}%</p>
-        </div>
-
-        <div class="card neutral">
-            <h2>Neutral 😐</h2>
-            <h1>{{ neutral }}</h1>
-            <p>{{ neutral_pct }}%</p>
-        </div>
-
-        <div class="card negative">
-            <h2>Negative 😡</h2>
-            <h1>{{ negative }}</h1>
-            <p>{{ negative_pct }}%</p>
-        </div>
-
-    </div>
-
-    <h2>Analyzed Comments</h2>
-
-    <table>
-
-        <tr>
-            <th>Comment</th>
-            <th>Sentiment</th>
-        </tr>
-
-        {% for row in comments %}
-        <tr>
-            <td>{{ row.comment }}</td>
-            <td>{{ row.sentiment }}</td>
-        </tr>
+      <ul class="panel active" data-panel="random">
+        {% for row in random_comments %}
+        <li class="comment-card sentiment-{{ row.sentiment|lower }}">
+          <p class="comment-text">{{ row.comment }}</p>
+          <span class="comment-tag">{{ row.sentiment }} · {{ "%.0f"|format(row.score * 100) }}%</span>
+        </li>
         {% endfor %}
+      </ul>
 
-    </table>
+      <ul class="panel" data-panel="positive">
+        {% for row in top_positive %}
+        <li class="comment-card sentiment-positive">
+          <p class="comment-text">{{ row.comment }}</p>
+          <span class="comment-tag">{{ "%.0f"|format(row.score * 100) }}% confident</span>
+        </li>
+        {% else %}
+        <p class="empty-note">No positive comments found.</p>
+        {% endfor %}
+      </ul>
 
-</div>
+      <ul class="panel" data-panel="negative">
+        {% for row in top_negative %}
+        <li class="comment-card sentiment-negative">
+          <p class="comment-text">{{ row.comment }}</p>
+          <span class="comment-tag">{{ "%.0f"|format(row.score * 100) }}% confident</span>
+        </li>
+        {% else %}
+        <p class="empty-note">No negative comments found.</p>
+        {% endfor %}
+      </ul>
 
+      <ul class="panel" data-panel="neutral">
+        {% for row in top_neutral %}
+        <li class="comment-card sentiment-neutral">
+          <p class="comment-text">{{ row.comment }}</p>
+          <span class="comment-tag">{{ "%.0f"|format(row.score * 100) }}% confident</span>
+        </li>
+        {% else %}
+        <p class="empty-note">No neutral comments found.</p>
+        {% endfor %}
+      </ul>
+
+    </div>
+  </section>
+  {% else %}
+  <section class="empty-state">
+    <h2>Nothing analyzed yet</h2>
+    <p>Run the pipeline from the project folder, in order:</p>
+    <ol>
+      <li><code>python extract_comments.py</code> — scrapes comments and saves the video's title and thumbnail</li>
+      <li><code>python clean_data.py</code> — removes duplicates and junk rows</li>
+      <li><code>python sentiment_comments.py</code> — scores every comment</li>
+    </ol>
+    <p>Then refresh this page.</p>
+  </section>
+  {% endif %}
+
+</main>
+
+<script src="/static/script.js"></script>
 </body>
 </html>
