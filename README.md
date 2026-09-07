@@ -1,8 +1,11 @@
+
 # PulseScope
 
 **See how viewers really feel about a YouTube video, at a glance.**
 
 PulseScope scrapes the comments off a YouTube video, runs each one through a sentiment model, and shows you the result on a single dashboard: the video itself, an overall positive/neutral/negative breakdown, and a curated set of comments worth actually reading — not a giant table of everything.
+
+https://github.com/user-attachments/assets/846364f8-5f8f-4e3e-9004-a9d7a583a2e3
 
 ---
 
