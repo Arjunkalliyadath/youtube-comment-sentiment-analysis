@@ -62,7 +62,7 @@ The four generated files aren't checked into the repo — they're created the fi
 Clone the repository and move into it:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/Arjunkalliyadath/youtube-comment-sentiment-analysis.git
 cd PulseScope
 ```
 
