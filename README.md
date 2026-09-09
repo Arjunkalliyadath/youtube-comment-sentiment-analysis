@@ -163,4 +163,6 @@ The scraper works on any public YouTube video with comments enabled. Very large 
 
 ## Author
 
-Arjun K
+**Arjun K**
+- GitHub: [@Arjunkalliyadath](https://github.com/Arjunkalliyadath)
+- Email: arjunkalliyadath2001@gmail.com
